@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Misi Pemakanan Pintar | Teacher Vi</title>
+<style>
+  :root{--ink:#15304b;--blue:#2478d4;--cyan:#52d6df;--yellow:#ffd45a;--pink:#ff7ca8;--green:#35c98b;--glass:rgba(255,255,255,.88)}
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:#122b45}
+  button{font:inherit;cursor:pointer;border:0}
+  #scene{position:fixed;inset:0;overflow:hidden;background:radial-gradient(circle at 20% 15%,#9be9ef 0,#3f8fba 36%,#173653 100%)}
+  #webcam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:.82;filter:saturate(1.08) brightness(.88);display:none}
+  #cameraShade{position:absolute;inset:0;background:linear-gradient(115deg,rgba(7,35,62,.38),rgba(8,42,65,.12) 48%,rgba(9,34,55,.5)),linear-gradient(0deg,rgba(9,32,55,.48),transparent 45%);pointer-events:none}
+  #fallbackBg{position:absolute;inset:0;background:radial-gradient(circle at 78% 25%,rgba(255,255,255,.5),transparent 20%),radial-gradient(circle at 18% 75%,rgba(255,212,90,.35),transparent 25%),linear-gradient(135deg,#8be0df,#6ca8db 50%,#244e7a)}
+  .orb{position:absolute;border-radius:50%;filter:blur(1px);opacity:.35;pointer-events:none}.orb.one{width:280px;height:280px;background:#ffe27a;right:7%;top:10%}.orb.two{width:190px;height:190px;background:#ff8ab3;left:4%;bottom:8%}
+  .app{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:clamp(12px,2vw,26px);gap:12px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;text-shadow:0 2px 10px #15304b66}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.2px}.brandmark{width:44px;height:44px;border-radius:15px;background:linear-gradient(145deg,#ffe17b,#ff9d70);display:grid;place-items:center;font-size:24px;box-shadow:0 8px 22px #092b4b55}
+  .brand small{display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:.88}
+  .tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.tool{border:1px solid #ffffff75;background:#ffffffdf;color:#173b5b;border-radius:999px;padding:9px 14px;font-weight:800;font-size:13px;box-shadow:0 5px 18px #123a5a22}.tool:hover{transform:translateY(-1px);background:#fff}.tool.primary{background:var(--yellow);border-color:#ffe9a3}
+  .main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(250px, .78fr) minmax(430px,1.5fr);gap:clamp(12px,2vw,24px);align-items:stretch}
+  .leftcol{display:flex;flex-direction:column;gap:12px;min-height:0}
+  .glass{background:var(--glass);border:1px solid #ffffffb8;border-radius:24px;box-shadow:0 18px 50px #092b4b33;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+  .mission{padding:20px;position:relative;overflow:hidden}.eyebrow{font-size:11px;letter-spacing:1.6px;font-weight:900;color:#277bb7;text-transform:uppercase}.mission h1{font-size:clamp(25px,3vw,39px);line-height:1.03;margin:9px 0 10px;letter-spacing:-1.4px}.mission p{font-size:14px;line-height:1.5;margin:0;color:#4d6680}.mission .badge{display:inline-flex;margin-top:14px;padding:7px 11px;border-radius:99px;background:#e6f8f4;color:#147b66;font-size:12px;font-weight:900}
+  .progressbox{padding:16px 18px}.progresshead{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:13px;margin-bottom:10px}.progressline{height:10px;background:#e2edf5;border-radius:20px;overflow:hidden}.progressfill{height:100%;width:0;background:linear-gradient(90deg,#35c98b,#58d8db,#4b94ef);border-radius:20px;transition:width .35s}.dots{display:flex;gap:7px;margin-top:12px}.dot{height:8px;flex:1;border-radius:20px;background:#d9e6ef}.dot.done{background:#38c895}.dot.current{background:#ffc84f;box-shadow:0 0 0 3px #ffc84f44}
+  .guide{padding:16px 18px;flex:1;min-height:130px}.guide h3{margin:0 0 9px;font-size:14px}.guide ul{padding-left:18px;margin:0;color:#4c647b;font-size:13px;line-height:1.65}.guide li::marker{color:#2d9cba}.status{font-size:12px;color:#fff;text-shadow:0 1px 5px #123;display:flex;align-items:center;gap:7px;padding:2px 4px}.status i{width:8px;height:8px;border-radius:50%;background:#ffd45a;display:inline-block;box-shadow:0 0 0 4px #ffd45a33}.status.ready i{background:#40e0a1;box-shadow:0 0 0 4px #40e0a133}
+  .quizpanel{padding:clamp(17px,2.2vw,28px);display:flex;flex-direction:column;min-height:0;position:relative;overflow:auto}.questiontop{display:flex;justify-content:space-between;align-items:center;gap:10px}.qnumber{font-size:12px;font-weight:900;letter-spacing:1.3px;color:#277bb7;text-transform:uppercase}.score{border-radius:99px;background:#fff3ce;color:#865c00;padding:8px 12px;font-size:12px;font-weight:900;white-space:nowrap}.question{font-size:clamp(20px,2.35vw,30px);line-height:1.2;letter-spacing:-.7px;margin:17px 0 18px;font-weight:900;color:#183956}
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:11px}.answer{position:relative;min-height:88px;text-align:left;padding:15px 15px 15px 58px;border-radius:18px;background:#fff;border:2px solid #e5eef5;color:#294963;font-size:clamp(13px,1.2vw,15px);font-weight:750;line-height:1.38;box-shadow:0 5px 14px #16466b0c;transition:transform .18s,border .18s,background .18s;touch-action:manipulation}.answer:hover{transform:translateY(-2px);border-color:#80cde0}.answer .letter{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:grid;place-items:center;border-radius:11px;background:#e8f4fc;color:#277bb7;font-weight:1000;font-size:15px}.answer.selected{border-color:#3e9ee1;background:#edf8ff}.answer.correct{border-color:#37c88b;background:#e9fff5}.answer.correct .letter{background:#36c98b;color:white}.answer.wrong{border-color:#f18a91;background:#fff0f0}.answer.wrong .letter{background:#ee777f;color:#fff}.answer:disabled{cursor:default}
+  .feedback{margin-top:14px;padding:13px 15px;border-radius:16px;background:#edf7ff;border:1px solid #d8eefa;color:#315873;font-size:13px;line-height:1.5;display:none}.feedback.show{display:block;animation:pop .25s ease}.feedback.good{background:#eafff4;border-color:#bdeed7;color:#176a4c}.feedback.bad{background:#fff5e8;border-color:#ffe0ad;color:#80521b}
+  .panelactions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;padding-top:17px}.hint{font-size:11px;color:#6a8195;line-height:1.4}.action{padding:12px 19px;border-radius:14px;background:#2478d4;color:white;font-weight:900;box-shadow:0 8px 18px #2478d444;transition:.18s}.action:hover{transform:translateY(-2px);background:#1768bd}.action.secondary{background:#e8f2f9;color:#315873;box-shadow:none}.action:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .screen{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:20px;background:#0c2944a8;backdrop-filter:blur(8px)}.screen.hidden{display:none}.modal{width:min(560px,100%);padding:clamp(22px,4vw,38px);text-align:center}.modal .emoji{font-size:48px;margin-bottom:7px}.modal h2{font-size:clamp(24px,4vw,34px);margin:5px 0 10px;letter-spacing:-.8px}.modal p{color:#587188;line-height:1.55;font-size:14px;margin:0 auto 18px;max-width:440px}.modal .action{margin:5px}.smallnote{font-size:11px!important;color:#71869a!important;margin-top:12px!important}
+  #cursor{position:fixed;z-index:10;width:25px;height:25px;border:3px solid #fff;border-radius:50%;background:#ffca4d88;box-shadow:0 0 0 5px #ffca4d55,0 3px 12px #092b4b66;pointer-events:none;transform:translate(-50%,-50%);display:none;transition:width .08s,height .08s,border-color .08s}#cursor.pinching{width:18px;height:18px;background:#35d69a;border-color:#fff;box-shadow:0 0 0 6px #35d69a55}
+  #hintBubble{position:fixed;z-index:9;left:50%;bottom:20px;transform:translateX(-50%);padding:10px 16px;background:#123c5fe8;color:#fff;border:1px solid #ffffff55;border-radius:99px;font-size:12px;font-weight:800;box-shadow:0 8px 24px #092b4b55;pointer-events:none;max-width:90vw;text-align:center}
+  .cameraError{margin:12px auto 0;padding:11px 13px;border-radius:12px;background:#fff0ed;color:#9b3f35;font-size:12px;line-height:1.45;display:none;text-align:left}.cameraError.show{display:block}
+  .resultStars{font-size:28px;letter-spacing:5px;color:#ffbd3d;margin:8px 0}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @media(max-width:850px){.main{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow:auto}.leftcol{display:grid;grid-template-columns:1fr 1fr}.mission{grid-column:1/-1;padding:15px 17px}.mission h1{font-size:27px}.guide{display:none}.quizpanel{min-height:0}.app{overflow:auto}.status{display:none}.answers{grid-template-columns:1fr 1fr}.answer{min-height:76px}.progressbox{padding:13px 15px}}
+  @media(max-width:540px){.topbar{align-items:flex-start}.brand{font-size:13px}.brandmark{width:38px;height:38px}.tools{gap:5px}.tool{padding:8px 10px;font-size:11px}.main{display:flex;flex-direction:column}.leftcol{display:flex;gap:8px}.mission{padding:12px 15px}.mission h1{font-size:24px;margin:5px 0}.mission p{font-size:12px}.mission .badge{margin-top:8px}.progressbox{padding:11px 14px}.quizpanel{flex:1;padding:17px;border-radius:20px}.question{font-size:21px;margin:13px 0}.answers{grid-template-columns:1fr;gap:8px}.answer{min-height:61px;padding:11px 12px 11px 52px;font-size:13px}.answer .letter{width:29px;height:29px}.panelactions{padding-top:12px}.hint{max-width:55%}.screen{padding:12px}}
+</style>
+</head>
+<body>
+<div id="scene">
+  <div id="fallbackBg"></div><div class="orb one"></div><div class="orb two"></div>
+  <video id="webcam" autoplay playsinline muted></video><div id="cameraShade"></div>
+</div>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="brandmark">🧠</div><div>MISI PEMAKANAN PINTAR<small>Pengembaraan ilmu bersama Teacher Vi</small></div></div>
+    <div class="tools">
+      <button class="tool primary" id="cameraBtn">📷 Mula Kamera</button>
+      <button class="tool" id="retryBtn" title="Cuba sambung kamera semula">↻ Cuba Semula</button>
+      <button class="tool" id="muteBtn">🔊 Bunyi</button>
+      <button class="tool" id="resetBtn">⟲ Mula Semula</button>
+    </div>
+  </header>
+  <main class="main">
+    <section class="leftcol">
+      <div class="mission glass">
+        <div class="eyebrow">Misi pembelajaran · 6 cabaran</div>
+        <h1>Kenali Badan,<br>Bijak Memilih!</h1>
+        <p>Jawab enam soalan tentang komposisi badan dan amalan pemakanan sihat. Fikir dahulu sebelum memilih jawapan.</p>
+        <span class="badge">🌟 Setiap jawapan betul = 1 mata</span>
+      </div>
+      <div class="progressbox glass">
+        <div class="progresshead"><span>Kemajuan misi</span><span id="progressText">0 / 6</span></div>
+        <div class="progressline"><div class="progressfill" id="progressFill"></div></div>
+        <div class="dots" id="dots"><span class="dot current"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      </div>
+      <div class="guide glass">
+        <h3>🖐️ Cara bermain</h3>
+        <ul>
+          <li>Angkat tangan dan halakan jari telunjuk ke pilihan jawapan.</li>
+          <li>Rapatkan ibu jari dengan telunjuk untuk memilih.</li>
+          <li>Atau gunakan tetikus / sentuhan pada skrin.</li>
+          <li>Jika tersilap, cuba lagi sebelum meneruskan.</li>
+        </ul>
+      </div>
+      <div class="status" id="cameraStatus"><i></i><span>Kamera belum diaktifkan · Tetikus boleh digunakan</span></div>
+    </section>
+    <section class="quizpanel glass" id="quizPanel">
+      <div class="questiontop"><div class="qnumber" id="qNumber">SOALAN 1 DARIPADA 6</div><div class="score" id="score">⭐ Markah: 0</div></div>
+      <div class="question" id="questionText">Apakah yang dimaksudkan dengan komposisi badan?</div>
+      <div class="answers" id="answers"></div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <div class="panelactions"><div class="hint" id="actionHint">Pilih satu jawapan untuk menyemak kefahaman kamu.</div><button class="action" id="nextBtn" disabled>Seterusnya →</button></div>
+    </section>
+  </main>
+</div>
+<div id="cursor"></div>
+<div id="hintBubble">Halakan jari telunjuk pada pilihan, kemudian rapatkan ibu jari dan telunjuk.</div>
+<div class="screen" id="welcomeScreen">
+  <div class="modal glass">
+    <div class="emoji">🥗✨</div><div class="eyebrow">Selamat datang ke</div>
+    <h2>Misi Pemakanan Pintar</h2>
+    <p>Selesaikan enam soalan objektif untuk mengumpul mata. Kamu boleh bermain menggunakan gerakan tangan di hadapan kamera, tetikus atau skrin sentuh.</p>
+    <button class="action" id="beginBtn">Mula Kuiz</button>
+    <button class="action secondary" id="welcomeCameraBtn">Aktifkan Kamera</button>
+    <p class="smallnote">Kamera ialah pilihan. Kuiz tetap boleh dimainkan tanpa kamera.</p>
+    <div class="cameraError" id="cameraError"></div>
+  </div>
+</div>
+<div class="screen hidden" id="resultScreen">
+  <div class="modal glass">
+    <div class="emoji">🏆</div><div class="eyebrow">Misi selesai</div>
+    <h2 id="resultTitle">Syabas!</h2><div class="resultStars" id="resultStars">★★★★★</div>
+    <p id="resultText">Kamu telah menamatkan semua soalan.</p>
+    <button class="action" id="playAgainBtn">Main Semula</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script>
+(() => {
+  'use strict';
+  const questions = [
+    {q:'Apakah yang dimaksudkan dengan komposisi badan?',a:['Peratusan lemak, otot, tulang dan air dalam badan','Jumlah makanan yang dimakan dalam sehari','Jumlah tenaga yang digunakan ketika bersenam','Bilangan hidangan yang diambil setiap hari'],correct:0,why:'Komposisi badan menerangkan bahagian atau peratusan lemak, otot, tulang dan air yang membentuk badan.'},
+    {q:'Apakah yang berlaku apabila seseorang mengambil tenaga daripada makanan lebih banyak daripada tenaga yang digunakan secara berterusan?',a:['Berat badan cenderung meningkat','Berat badan pasti menurun','Komposisi badan tidak akan berubah','Semua tenaga akan ditukar menjadi otot'],correct:0,why:'Lebihan tenaga yang berterusan boleh disimpan dalam badan, termasuk sebagai lemak. Oleh itu, berat badan cenderung meningkat.'},
+    {q:'Seorang ibu memberikan susu ibu kepada bayi berusia 5 bulan. Apakah amalan pemakanan yang paling sesuai?',a:['Meneruskan penyusuan susu ibu secara eksklusif sehingga bayi berusia 6 bulan','Menggantikan susu ibu dengan air kosong setiap hari','Memberikan makanan pejal sebagai hidangan utama','Memberikan minuman manis untuk menambah tenaga'],correct:0,why:'Penyusuan susu ibu secara eksklusif disarankan sehingga bayi berusia 6 bulan, kecuali atas nasihat profesional kesihatan.'},
+    {q:'Mengapakah kanak-kanak memerlukan makanan yang membekalkan tenaga dan protein yang mencukupi?',a:['Untuk menyokong pertumbuhan, perkembangan dan aktiviti harian','Untuk mengelakkan semua perubahan berat badan','Untuk memastikan kanak-kanak tidak perlu aktif','Untuk menggantikan keperluan tidur yang mencukupi'],correct:0,why:'Tenaga menyokong aktiviti harian, manakala protein membantu pertumbuhan dan pembaikan tisu serta perkembangan.'},
+    {q:'Apakah amalan pemakanan yang membantu memenuhi keperluan nutrien ibu hamil?',a:['Mengambil makanan pelbagai dan seimbang serta mengikuti nasihat kesihatan','Mengurangkan semua makanan berprotein','Mengambil makanan manis sahaja untuk tenaga','Mengelakkan semua sayur-sayuran dan buah-buahan'],correct:0,why:'Pemakanan yang pelbagai dan seimbang membantu membekalkan nutrien. Ibu hamil juga perlu mengikuti nasihat petugas kesihatan.'},
+    {q:'Remaja aktif bersukan dan sedang mengalami pertumbuhan pesat. Apakah pilihan pemakanan yang paling sesuai?',a:['Makanan seimbang dengan tenaga, protein, kalsium dan zat besi yang mencukupi','Mengambil makanan rendah tenaga sahaja','Menggantikan hidangan utama dengan minuman bergula','Mengelakkan semua sumber karbohidrat'],correct:0,why:'Remaja yang aktif dan sedang membesar memerlukan makanan seimbang yang membekalkan tenaga serta protein, kalsium dan zat besi.'}
+  ];
+  const $ = id => document.getElementById(id);
+  const video=$('webcam'), cameraBtn=$('cameraBtn'), retryBtn=$('retryBtn'), cameraStatus=$('cameraStatus'), cameraError=$('cameraError');
+  let index=0,score=0,answered=false,stream=null,hands=null,raf=null,cameraOn=false,muted=false,audioCtx=null;
+  let cursorX=innerWidth/2,cursorY=innerHeight/2,targetX=cursorX,targetY=cursorY,pinchActive=false,pinchStart=false,lastPinch=0;
+  let dwellTarget=null,dwellStart=0,dwellDone=false,lastHoverElement=null,lastGestureAt=0;
+  const cursor=$('cursor');
+  const clickableSelector='.answer:not(:disabled), #nextBtn:not(:disabled), #beginBtn, #welcomeCameraBtn, #playAgainBtn, #cameraBtn, #retryBtn, #muteBtn, #resetBtn';
+  function sound(freq=560,duration=.09,type='sine'){
+    if(muted)return;
+    try{audioCtx ||= new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended')audioCtx.resume();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.0001,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.12,audioCtx.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration+.02)}catch(e){}
+  }
+  function render(){
+    const q=questions[index];$('qNumber').textContent=`SOALAN ${index+1} DARIPADA 6`;$('questionText').textContent=q.q;$('score').textContent=`⭐ Markah: ${score}`;
+    $('answers').innerHTML='';q.a.forEach((txt,i)=>{const b=document.createElement('button');b.className='answer';b.dataset.answer=i;b.innerHTML=`<span class="letter">${'ABCD'[i]}</span><span>${txt}</span>`;b.addEventListener('click',()=>choose(i));$('answers').appendChild(b)});
+    $('feedback').className='feedback';$('feedback').textContent='';answered=false;$('nextBtn').disabled=true;$('nextBtn').textContent=index===5?'Lihat Keputusan →':'Seterusnya →';$('actionHint').textContent='Pilih satu jawapan untuk menyemak kefahaman kamu.';
+    $('progressText').textContent=`${index} / 6`; $('progressFill').style.width=`${index/6*100}%`;
+    [...$('dots').children].forEach((d,i)=>{d.className='dot'+(i<index?' done':i===index?' current':'')});
+  }
+  function choose(i){if(answered)return;const q=questions[index],buttons=[...document.querySelectorAll('.answer')];
+    if(i===q.correct){answered=true;score++;buttons.forEach((b,j)=>{b.disabled=true;if(j===q.correct)b.classList.add('correct')});$('feedback').className='feedback show good';$('feedback').innerHTML=`<strong>Hebat! Jawapan kamu betul.</strong><br>${q.why}`;$('nextBtn').disabled=false;$('actionHint').textContent='Bagus! Tekan seterusnya apabila bersedia.';$('score').textContent=`⭐ Markah: ${score}`;$('progressText').textContent=`${index+1} / 6`;$('progressFill').style.width=`${(index+1)/6*100}%`;[...$('dots').children][index].className='dot done';sound(740,.14);setTimeout(()=>sound(920,.12),90);
+    }else{buttons[i].classList.add('wrong');$('feedback').className='feedback show bad';$('feedback').innerHTML='<strong>Belum tepat. Cuba sekali lagi!</strong><br>Baca semula soalan dan fikirkan pilihan yang paling sesuai.';$('actionHint').textContent='Kamu boleh memilih jawapan lain.';sound(210,.15,'triangle');setTimeout(()=>buttons[i]?.classList.remove('wrong'),900)}
+  }
+  function next(){if(!answered)return;if(index<5){index++;render();sound(620,.08)}else{showResults()}}
+  function showResults(){ $('resultScreen').classList.remove('hidden');$('resultTitle').textContent=score===6?'Cemerlang!':score>=4?'Syabas! Teruskan usaha!':'Terima kasih mencuba!';$('resultText').textContent=`Kamu memperoleh ${score} daripada 6 mata. ${score===6?'Semua jawapan tepat. Terus amalkan ilmu pemakanan sihat!': 'Ulang kuiz untuk mengukuhkan pengetahuan tentang pemakanan seimbang.'}`;$('resultStars').textContent='★'.repeat(score)+'☆'.repeat(6-score);sound(800,.2);}
+  function reset(){index=0;score=0;$('resultScreen').classList.add('hidden');$('welcomeScreen').classList.add('hidden');render();sound(520,.08)}
+  $('nextBtn').addEventListener('click',next);$('beginBtn').addEventListener('click',()=>{$('welcomeScreen').classList.add('hidden');render();sound(600,.1)});$('playAgainBtn').addEventListener('click',reset);$('resetBtn').addEventListener('click',()=>{$('welcomeScreen').classList.remove('hidden');reset();$('welcomeScreen').classList.remove('hidden')});
+  $('muteBtn').addEventListener('click',()=>{muted=!muted;$('muteBtn').textContent=muted?'🔇 Senyap':'🔊 Bunyi';if(!muted)sound(600,.08)});
+  function setCameraMessage(msg){cameraError.textContent=msg;cameraError.classList.add('show')}
+  async function startCamera(){
+    cameraError.classList.remove('show');
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){setCameraMessage('Pelayar ini tidak menyediakan akses kamera. Buka permainan melalui localhost atau laman HTTPS menggunakan pelayar yang menyokong kamera. Kamu masih boleh bermain menggunakan tetikus atau skrin sentuh.');return}
+    try{
+      if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});
+      video.srcObject=stream;await video.play();$('fallbackBg').style.display='none';video.style.display='block';cameraOn=true;
+      if(!window.Hands){throw new Error('Pustaka penjejakan tangan tidak dapat dimuatkan. Semak sambungan internet dan muat semula halaman.')}
+      hands=new Hands({locateFile:(file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+      hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.65,minTrackingConfidence:.6});
+      hands.onResults(onHandResults);processFrames();
+      cameraStatus.classList.add('ready');cameraStatus.innerHTML='<i></i><span>Kamera aktif · Halakan tangan ke hadapan kamera</span>';
+      cameraBtn.textContent='📷 Kamera Aktif';$('hintBubble').textContent='Jari telunjuk menggerakkan penuding · Rapatkan ibu jari dan telunjuk untuk memilih.';
+    }catch(err){cameraOn=false; if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}video.style.display='none';$('fallbackBg').style.display='block';
+      let msg='Kamera tidak dapat diaktifkan. Pastikan kebenaran kamera dibenarkan pada pelayar dan kamera tidak sedang digunakan oleh aplikasi lain.';
+      if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError')msg='Akses kamera ditolak. Klik ikon kunci kamera pada bar alamat pelayar, benarkan akses kamera untuk laman ini, kemudian tekan “Cuba Semula”.';
+      else if(err.name==='NotFoundError'||err.name==='DevicesNotFoundError')msg='Kamera tidak ditemui. Sambungkan kamera atau teruskan bermain menggunakan tetikus / skrin sentuh.';
+      else if(err.name==='NotReadableError'||err.name==='TrackStartError')msg='Kamera sedang digunakan atau tidak dapat dibaca. Tutup aplikasi lain yang menggunakan kamera, kemudian cuba semula.';
+      else if(err.message)msg=err.message+' Kamu boleh terus bermain menggunakan tetikus atau skrin sentuh.';
+      setCameraMessage(msg);cameraStatus.classList.remove('ready');cameraStatus.innerHTML='<i></i><span>Kamera tidak aktif · Tetikus / sentuhan tersedia</span>';cameraBtn.textContent='📷 Mula Kamera';
+    }
+  }
+  async function processFrames(){if(!cameraOn||!hands)return;try{if(video.readyState>=2)await hands.send({image:video})}catch(e){}raf=requestAnimationFrame(processFrames)}
+  function displayPoint(nx,ny){const vw=innerWidth,vh=innerHeight,sw=video.videoWidth||vw,sh=video.videoHeight||vh,scale=Math.max(vw/sw,vh/sh),rw=sw*scale,rh=sh*scale,ox=(vw-rw)/2,oy=(vh-rh)/2;return{x:vw-(nx*rw+ox),y:ny*rh+oy}}
+  function onHandResults(results){if(!results.multiHandLandmarks||!results.multiHandLandmarks.length){cursor.style.display='none';pinchActive=false;return}cursor.style.display='block';const lm=results.multiHandLandmarks[0],p=displayPoint(lm[8].x,lm[8].y),thumb=displayPoint(lm[4].x,lm[4].y);targetX=p.x;targetY=p.y;
+    const dist=Math.hypot(thumb.x-p.x,thumb.y-p.y),now=performance.now();
+    if(!pinchActive&&dist<42){pinchActive=true;lastPinch=now;lastGestureAt=now;cursor.classList.add('pinching');activateAt(p.x,p.y)}
+    else if(pinchActive&&dist>62){pinchActive=false;cursor.classList.remove('pinching')}
+  }
+  function activateAt(x,y){const el=document.elementFromPoint(x,y)?.closest(clickableSelector);if(el){if(el.classList.contains('answer'))el.click();else if(el.id==='nextBtn'||el.id==='beginBtn'||el.id==='welcomeCameraBtn'||el.id==='playAgainBtn'||el.id==='cameraBtn'||el.id==='retryBtn'||el.id==='muteBtn'||el.id==='resetBtn')el.click()}}
+  function animateCursor(){cursorX+=(targetX-cursorX)*.32;cursorY+=(targetY-cursorY)*.32;cursor.style.left=cursorX+'px';cursor.style.top=cursorY+'px';if(cameraOn&&cursor.style.display!=='none')handleDwell(cursorX,cursorY);requestAnimationFrame(animateCursor)}
+  function handleDwell(x,y){if(performance.now()-lastGestureAt<1000)return;const el=document.elementFromPoint(x,y)?.closest(clickableSelector);if(!el){dwellTarget=null;dwellDone=false;return}if(el!==dwellTarget){dwellTarget=el;dwellStart=performance.now();dwellDone=false}if(!dwellDone&&performance.now()-dwellStart>800){dwellDone=true;el.click();sound(650,.07)}}
+  // Pinch dan hover menggunakan penuding yang sama; elakkan pengaktifan berganda.
+  let lastPinchElement=null;
+  function smoothLoop(){cursorX+=(targetX-cursorX)*.3;cursorY+=(targetY-cursorY)*.3;cursor.style.left=cursorX+'px';cursor.style.top=cursorY+'px';requestAnimationFrame(smoothLoop)}
+  $('cameraBtn').addEventListener('click',startCamera);$('retryBtn').addEventListener('click',startCamera);$('welcomeCameraBtn').addEventListener('click',startCamera);
+  // Mulakan animasi penuding dan permainan.
+  render();smoothLoop();
+  // Sentuhan dan tetikus menggunakan fungsi choose/next yang sama seperti kawalan tangan.
+})();
+</script>
+</body>
+</html>
